@@ -10,6 +10,7 @@ from autogen_ext.models.openai import OpenAIChatCompletionClient
 from autogen_ext.tools.langchain import LangChainToolAdapter
 from dotenv import load_dotenv
 from istio_agent import IstioAgent
+from kubernetes_agent import KubernetesAgent
 from lib.websearch import google_search
 
 from langchain_community.tools import ShellTool, DuckDuckGoSearchResults
@@ -102,20 +103,16 @@ async def main():
     )
 
     shell_langchain_tool = LangChainToolAdapter(ShellTool())
-    runner_agent = AssistantAgent(
-        name="RunnerAgent",
-        description="Executes commands on a terminal.",
-        model_client=llm,
-        system_message=runner_agent_prompt,
-        tools=[shell_langchain_tool],
-    )
-    
 
     istio_agent = IstioAgent(
         name="IstioAgent",
         model_client=llm,
     )
-
+    
+    kubernetes_agent = KubernetesAgent(
+        name="KubernetesAgent",
+        model_client=llm,
+    )
 
     # Termination conditions
     text_mention_termination = TextMentionTermination("TERMINATE")
@@ -123,14 +120,14 @@ async def main():
     termination = text_mention_termination | max_messages_termination
 
     team = SelectorGroupChat(
-        [planning_agent, istio_agent], # web_search_agent, fixer_agent, runner_agent],
+        [planning_agent, istio_agent, kubernetes_agent], # web_search_agent, fixer_agent, runner_agent],
         model_client=llm,
         termination_condition=termination,
     )
 
     # The user’s ask. This is for demo
     # in real it would be a UI, or terminal input
-    user_question = """Is my Istio installation correct?"""
+    user_question = """Is my Istio installation correct? Also, how many pods are running in the default namespace?"""
 
     # Stream the conversation in the console
     await Console(team.run_stream(task=user_question))
