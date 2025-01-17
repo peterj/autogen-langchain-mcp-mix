@@ -9,6 +9,7 @@ from autogen_core import TRACE_LOGGER_NAME
 from autogen_ext.models.openai import OpenAIChatCompletionClient
 from autogen_ext.tools.langchain import LangChainToolAdapter
 from dotenv import load_dotenv
+from istio_agent import IstioAgent
 from lib.websearch import google_search
 
 from langchain_community.tools import ShellTool, DuckDuckGoSearchResults
@@ -108,6 +109,13 @@ async def main():
         system_message=runner_agent_prompt,
         tools=[shell_langchain_tool],
     )
+    
+
+    istio_agent = IstioAgent(
+        name="IstioAgent",
+        model_client=llm,
+    )
+
 
     # Termination conditions
     text_mention_termination = TextMentionTermination("TERMINATE")
@@ -115,38 +123,14 @@ async def main():
     termination = text_mention_termination | max_messages_termination
 
     team = SelectorGroupChat(
-        [planning_agent, web_search_agent, fixer_agent, runner_agent],
+        [planning_agent, istio_agent], # web_search_agent, fixer_agent, runner_agent],
         model_client=llm,
         termination_condition=termination,
     )
 
     # The user’s ask. This is for demo
     # in real it would be a UI, or terminal input
-    user_question = """
-    This route table has an issue, can you help me resolve it?
-    It doesn't configure the gateway for north south traffic
-
-    ```
-    apiVersion: networking.istio.io/v1
-    kind: VirtualService
-    metadata:
-      name: reviews-route
-      namespace: foo
-    spec:
-      hosts:
-      - reviews # interpreted as reviews.foo.svc.cluster.local
-      http:
-      - match:
-        - uri:
-            prefix: "/wpcatalog"
-        - uri:
-            prefix: "/consumercatalog"
-        rewrite:
-          uri: "/newcatalog"
-    ```
-
-    The answer should be grounded in the official Istio API docs.
-    """
+    user_question = """Is my Istio installation correct?"""
 
     # Stream the conversation in the console
     await Console(team.run_stream(task=user_question))
