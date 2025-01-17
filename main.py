@@ -28,7 +28,7 @@ You are a planning agent.
 Your job is to break down complex tasks into smaller, manageable subtasks, that result in a change in the system.
 You should create a complete plan without asking for confirmation.
 
-You only plan and delegate tasks. Use other agents to execute commands.
+You only plan and delegate tasks. Use other agents (KubernetesAgent and IstioAgent) to perform and execute tasks.
 
 When assigning tasks, use this format:
 1. <agent> : <task>
@@ -122,7 +122,7 @@ async def main():
 
     # The user’s ask. This is for demo
     # in real it would be a UI, or terminal input
-    user_question = """Give me the pod IP for the pods with the app=reviews label"""
+    user_question = """Give me the pod IP for all pods in the cluster. Also I want all deployment names. Return a summary of the results."""
 
     # Stream the conversation in the console
     await Console(team.run_stream(task=user_question))

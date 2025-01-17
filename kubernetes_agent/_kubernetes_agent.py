@@ -19,7 +19,7 @@ from autogen_core.models import (
     UserMessage,
 )
 
-from kubernetes_agent._tool_definitions import  TOOL_GET_PODS
+from kubernetes_agent._tool_definitions import  TOOL_GET_PODS, TOOL_GET_DEPLOYMENTS
 
 
 class KubernetesAgent(BaseChatAgent):
@@ -95,6 +95,7 @@ class KubernetesAgent(BaseChatAgent):
             messages=history + [task_message],
             tools=[
                 TOOL_GET_PODS,
+                TOOL_GET_DEPLOYMENTS
             ],
             cancellation_token=cancellation_token,
         )
@@ -119,6 +120,10 @@ class KubernetesAgent(BaseChatAgent):
                 command_result = ""
                 if tool_name == "get_pods":
                     command_result = run_kubectl_command("get", ["pods"], arguments)
+                    return False, command_result
+                elif tool_name == "get_deployments":
+                    # TODO: Here we could decide whether we call the API or execute the CLI command
+                    command_result = run_kubectl_command("get", ["deployments"], arguments)
                     return False, command_result
 
         final_response = "TERMINATE"
