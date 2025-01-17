@@ -27,13 +27,8 @@ planning_agent_prompt = """
 You are a planning agent.
 Your job is to break down complex tasks into smaller, manageable subtasks, that result in a change in the system.
 You should create a complete plan without asking for confirmation.
-Your team members are:
-    WebSearchAgent: Searches for information
-    FixerAgent: Modifies or generates YAML based on gathered information
-    RunnerAgent: Applies configurations to a terminal
 
-You only plan and delegate tasks. The WebSearchAgent should search for all the information needed so that the FixerAgent can
-craft an API in yaml format that is ready to be applied by the RunnerAgent.
+You only plan and delegate tasks. Use other agents to execute commands.
 
 When assigning tasks, use this format:
 1. <agent> : <task>
@@ -127,7 +122,7 @@ async def main():
 
     # The user’s ask. This is for demo
     # in real it would be a UI, or terminal input
-    user_question = """Is my Istio installation correct? Also, how many pods are running in the default namespace?"""
+    user_question = """Give me the pod IP for the pods with the app=reviews label"""
 
     # Stream the conversation in the console
     await Console(team.run_stream(task=user_question))
